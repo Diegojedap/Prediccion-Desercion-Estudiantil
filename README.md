@@ -312,12 +312,37 @@ sobrevive**, de modo que el material sensible no pueda publicarse por descuido.
 Documentar lo que un modelo todavía no hace bien es parte del trabajo. Estos son los puntos
 identificados durante la revisión, en orden de prioridad.
 
+### Fuga por grupo en la partición *(medido)*
+
+**El problema más grave del proyecto, y el que invalida el AUC reportado.**
+
+El dataset tiene una fila por estudiante y periodo, de modo que un mismo alumno aparece
+varias veces: 3,7 filas en promedio, hasta 28, y el **89,7 % de las filas pertenece a
+estudiantes con más de un registro**. Al partir train/test de forma aleatoria, las filas de
+un mismo estudiante caen a ambos lados.
+
+Medición sobre la partición 70/30 de la versión vigente:
+
+```
+Filas de prueba cuyo estudiante también está en entrenamiento:  86,5 %
+```
+
+El modelo puede memorizar al individuo en lugar de aprender el fenómeno, y casi todo el
+conjunto de prueba deja de ser información nueva. Un indicio adicional lo confirma: **ninguna
+variable supera un AUC de 0,673 por sí sola**, y la mejor es `SEMESTRE_SINU`. Que un conjunto
+de predictores tan débiles produzca 0,848 se explica mucho mejor por memorización de sujetos
+que por interacciones genuinas.
+
+**Corrección:** particionar por estudiante (`GroupKFold` / `GroupShuffleSplit` con
+`groups=IDENTIFICACION`), de modo que ningún alumno aparezca en ambos lados. Es previsible
+que el AUC caiga de forma considerable; ese número menor será el real.
+
 ### Validación temporal
 
-La versión vigente divide train/test de forma aleatoria, lo que mezcla periodos académicos.
-Para un sistema de alerta temprana la división debe ser **temporal**: entrenar con los
+Además de agrupar por estudiante, la división debe ser **temporal**: entrenar con los
 periodos antiguos y validar sobre el más reciente, como se ensayó en `Prototipo 1.7`. Una
-partición aleatoria sobre datos con estructura temporal produce métricas optimistas.
+partición aleatoria sobre datos con estructura temporal produce métricas optimistas incluso
+después de corregir la fuga por grupo.
 
 ### Horizonte de predicción
 
@@ -333,18 +358,30 @@ que estadísticas del conjunto de prueba influyan en el entrenamiento. El `fit` 
 exclusivamente dentro del pipeline, después del split. El `ImbPipeline` de la versión 1.6 ya
 resuelve esto para SMOTE; falta extenderlo al resto del preprocesamiento.
 
-### Revisión de fuga de información
+### Fuga de target por `TIPO_SALTO`: descartada *(medido)*
 
-`TIPO_SALTO` describe la transición al periodo siguiente y el target se deriva de la misma
-lógica de negocio. Si ese campo se materializa **después** de saber si el estudiante
-continuó, el modelo está observando la respuesta. Verificación pendiente: entrenar con y sin
-la variable y comparar el AUC; una caída pronunciada confirmaría la fuga.
+`TIPO_SALTO` describe la transición al periodo siguiente y el target se deriva de una lógica
+de negocio emparentada, así que era candidata natural a fuga. **La hipótesis se probó y no se
+sostiene:** el AUC máximo alcanzable usando únicamente esa variable —puntuando cada fila con
+la tasa empírica de su categoría, que es el techo invariante a la codificación— es de
+**0,5104**, apenas por encima del azar. Explica el 3 % de la separación del modelo.
 
-### Variables de baja cobertura
+Se deja documentado porque la sospecha era razonable y la refutación es parte del resultado:
+descartar una causa con una medición vale tanto como confirmarla.
 
-Tres de las variables presentan más del 90 % de valores faltantes. Imputar la mediana
-significa que la gran mayoría de las filas comparte un valor artificial, aportando ruido en
-lugar de señal. Conviene eliminarlas o convertirlas en indicadores binarios de presencia de
+### Variables sin información *(medido)*
+
+Dos de los predictores no aportan absolutamente nada tras la imputación:
+
+| Variable | Situación |
+|---|---|
+| `ESTADO_PAGO` | **Constante**: un único valor en todo el dataset |
+| `ASISTENCIA` | 99,69 % de las filas comparten el mismo valor |
+
+`ASISTENCIA` llegaba con más del 90 % de faltantes y la imputación por moda terminó de
+aplanarla. Otras variables presentan la misma patología en menor grado: imputar la mediana
+sobre una columna mayoritariamente vacía introduce un valor artificial masivo que aporta
+ruido, no señal. Conviene eliminarlas o convertirlas en indicadores binarios de presencia de
 registro.
 
 ### Consolidación técnica
