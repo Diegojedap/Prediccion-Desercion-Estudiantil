@@ -169,6 +169,41 @@ clasificador binario sobre toda la población el modelo es discreto; como **prio
 tramo crítico es fuerte — y un programa de permanencia no interviene sobre cien mil personas,
 sino sobre mil.
 
+### Qué intervención soporta este modelo, y cuál no
+
+Las variables provienen del **mismo periodo** que el target: rendimiento académico, cartera y
+matrícula de ese semestre. El target, a su vez, describe si el estudiante volvió a
+matricularse en el periodo siguiente.
+
+Eso ubica la alerta en un momento muy concreto: **al cerrar el periodo, antes de la ventana
+de rematrícula.** Que es exactamente cuando opera una campaña de reinscripción, así que el
+calendario encaja. Para ese uso el modelo sirve, y bien.
+
+No sirve, en cambio, para intervenir **durante** el periodo — tutorías, apoyo financiero,
+acompañamiento académico — porque para entonces sus variables todavía no existen. Eso exige
+anticiparse un periodo, y se midió cuánto cuesta:
+
+| | AUC | P@1 % | P@5 % | P@10 % |
+|---|---|---|---|---|
+| Variables del periodo *t* | 0.785 | 0.834 | 0.592 | 0.492 |
+| **Variables del periodo *t−1*** | **0.657** | **0.266** | 0.343 | 0.334 |
+
+Ambos evaluados sobre las mismas filas, de modo que la diferencia sea solo el desfase.
+
+**Anticiparse un periodo hace inviable el modelo.** La precisión del tramo prioritario cae de
+0.834 a 0.266 y el lift queda en 1,7×. Un síntoma lo confirma: en el modelo desfasado el
+top 1 % rinde *peor* que el top 5 %, es decir, el orden se invierte y sus predicciones más
+confiadas dejan de ser las mejores. La cola superior del ranking es ruido.
+
+La conclusión no es que el proyecto falle, sino que **su alcance es más estrecho de lo que
+sugiere el nombre**: es un priorizador para campañas de rematrícula, no un sistema de alerta
+temprana intra-periodo.
+
+Construir lo segundo requiere variables disponibles **al comienzo** del periodo —actividad en
+plataforma durante las primeras semanas, estado de pago temprano, comportamiento de
+inscripción, notas parciales— y no las hay en el conjunto actual. La fuente de actividad en
+plataforma, que es justamente ese tipo de señal, quedó fuera de esta versión.
+
 ### Por qué se opera por capacidad y no por umbral
 
 El umbral de probabilidad **no se transfiere entre periodos**: su óptimo se desplaza de forma
@@ -300,14 +335,24 @@ sobrevive**.
 
 ## Limitaciones y trabajo pendiente
 
-### Horizonte de predicción — la limitación de fondo
+### Horizonte de predicción — medido, y es la limitación de fondo
 
-Las variables predictoras pertenecen al **mismo periodo** que el target, de modo que el modelo
-caracteriza el presente en lugar de anticipar el futuro. Un sistema de alerta temprana
-requiere desfasarlas: usar la información del periodo *t* para estimar el riesgo en *t+1*.
+Documentada arriba con números: desfasar las variables un periodo cuesta 0.128 de AUC y hunde
+la precisión del tramo prioritario de 0.834 a 0.266.
 
-Es la limitación más importante y sigue abierta. Todo lo demás refina un modelo que aún
-responde una pregunta distinta a la que un programa de retención necesita.
+El pendiente real no es de modelado sino **de datos**: hacen falta variables observables al
+comienzo del periodo. Candidatas concretas, en orden de promesa:
+
+1. **Actividad en plataforma virtual durante las primeras semanas** — accesos, entregas,
+   participación. Es la señal temprana por excelencia y la fuente existe, pero quedó fuera de
+   esta versión.
+2. **Estado de pago al momento de la matrícula**, no al cierre.
+3. **Comportamiento de inscripción**: matrícula tardía, carga académica reducida respecto al
+   periodo anterior, cambios de modalidad.
+4. **Notas parciales de corte**, disponibles a mitad de periodo.
+
+Sin ellas, cualquier intento de anticipación se apoya en información del semestre anterior,
+que este experimento muestra insuficiente.
 
 ### Estabilidad del target
 
