@@ -193,15 +193,27 @@ sobremuestreo con validación cruzada.
 
 Hiperparámetros hallados con `BayesSearchCV` (30 iteraciones, `scoring='f1'`).
 
-### Desempeño sobre el conjunto de prueba
+### Desempeño
 
-| Métrica | Clase minoritaria (deserta) |
-|---|---|
-| Precision | 0.37 |
-| Recall | 0.57 |
-| F1-score | 0.45 |
+Se reportan dos cifras porque miden cosas distintas, y la segunda es la que importa para un
+despliegue real:
 
-**AUC-ROC: 0.848** — Umbral de decisión: **0.6162**
+| | Partición aleatoria | **Temporal + por estudiante** |
+|---|---|---|
+| | *la que produjo el modelo vigente* | ***estimación honesta*** |
+| AUC-ROC | 0.848 | **0.764** |
+| F1 (clase minoritaria) | 0.45 | **0.51** |
+| Recall | 0.57 | 0.44 |
+| Precision | 0.37 | **0.61** |
+
+La partición aleatoria sobrestima el AUC en unos **10 puntos**, porque mezcla periodos
+académicos. La segunda columna entrena con los periodos antiguos y evalúa sobre estudiantes
+nuevos de un periodo posterior — la situación real de un sistema de alerta temprana.
+
+Curiosamente, el punto de operación **mejora** en la evaluación honesta: precision de 0.61
+frente a 0.37. El modelo ordena peor sobre datos futuros, pero acierta más sobre las cohortes
+nuevas, que son justamente sobre las que se interviene. El detalle completo de la medición
+está en [Limitaciones](#cuánto-del-desempeño-lo-produce-la-partición-medido).
 
 ### Calibración del umbral
 
@@ -312,37 +324,56 @@ sobrevive**, de modo que el material sensible no pueda publicarse por descuido.
 Documentar lo que un modelo todavía no hace bien es parte del trabajo. Estos son los puntos
 identificados durante la revisión, en orden de prioridad.
 
-### Fuga por grupo en la partición *(medido)*
+### Cuánto del desempeño lo produce la partición *(medido)*
 
-**El problema más grave del proyecto, y el que invalida el AUC reportado.**
+Se aislaron las dos fuentes candidatas de optimismo entrenando **el mismo modelo, sobre los
+mismos datos y las mismas variables**, cambiando únicamente cómo se separa entrenamiento de
+prueba. XGBoost con los hiperparámetros de la versión vigente:
 
-El dataset tiene una fila por estudiante y periodo, de modo que un mismo alumno aparece
-varias veces: 3,7 filas en promedio, hasta 28, y el **89,7 % de las filas pertenece a
-estudiantes con más de un registro**. Al partir train/test de forma aleatoria, las filas de
-un mismo estudiante caen a ambos lados.
+| Partición | AUC | F1 | Recall | Precision | Solape de sujetos |
+|---|---|---|---|---|---|
+| **A** aleatoria *(la vigente)* | 0.8731 | 0.4375 | 0.790 | 0.303 | 86,5 % |
+| **B** por estudiante | 0.8731 | 0.4380 | 0.786 | 0.304 | 0,0 % |
+| **C** temporal (≤2023 → 2024) | 0.7722 | 0.4464 | 0.450 | 0.443 | 61,9 % |
+| **D** temporal + por estudiante | 0.7638 | 0.5113 | 0.438 | 0.615 | 0,0 % |
 
-Medición sobre la partición 70/30 de la versión vigente:
+**Descomposición:** partición por sujeto **0.000**, partición temporal **−0.101**.
 
-```
-Filas de prueba cuyo estudiante también está en entrenamiento:  86,5 %
-```
+### Fuga por grupo: descartada *(medido)*
 
-El modelo puede memorizar al individuo en lugar de aprender el fenómeno, y casi todo el
-conjunto de prueba deja de ser información nueva. Un indicio adicional lo confirma: **ninguna
-variable supera un AUC de 0,673 por sí sola**, y la mejor es `SEMESTRE_SINU`. Que un conjunto
-de predictores tan débiles produzca 0,848 se explica mucho mejor por memorización de sujetos
-que por interacciones genuinas.
+El dataset tiene una fila por estudiante y periodo —3,7 filas por alumno en promedio, con el
+89,7 % de las filas perteneciendo a estudiantes con más de un registro—, así que una
+partición aleatoria deja el 86,5 % de las filas de prueba en manos de alumnos ya vistos. Era
+una sospecha razonable de memorización de individuos.
 
-**Corrección:** particionar por estudiante (`GroupKFold` / `GroupShuffleSplit` con
-`groups=IDENTIFICACION`), de modo que ningún alumno aparezca en ambos lados. Es previsible
-que el AUC caiga de forma considerable; ese número menor será el real.
+**No lo es.** Eliminar por completo el solapamiento (fila B, `GroupShuffleSplit` con
+`groups=IDENTIFICACION`) deja el AUC en 0.8731: idéntico hasta la cuarta cifra. Las variables
+describen el periodo, no a la persona, de modo que reencontrar al mismo alumno en otro
+semestre no aporta información sobre su desenlace. El solapamiento existe, pero no infla la
+métrica.
 
-### Validación temporal
+### Validación temporal: confirmada *(medido)*
 
-Además de agrupar por estudiante, la división debe ser **temporal**: entrenar con los
-periodos antiguos y validar sobre el más reciente, como se ensayó en `Prototipo 1.7`. Una
-partición aleatoria sobre datos con estructura temporal produce métricas optimistas incluso
-después de corregir la fuga por grupo.
+Esta sí. Entrenar con los periodos antiguos y validar sobre el más reciente cuesta **10
+puntos de AUC** (0.8731 → 0.7722). La partición aleatoria mezcla periodos y deja que el
+modelo aproveche regularidades que no estarán disponibles al predecir un periodo futuro.
+
+**La estimación honesta de despliegue es la fila D: AUC 0.764** — alumnos nuevos, en un
+periodo posterior a todo lo visto durante el entrenamiento.
+
+Vale la pena notar que D tiene el **mejor F1 de las cuatro (0.511) y una precision de 0.615**,
+muy por encima del 0.30 de la partición aleatoria. El modelo pierde poder de ordenamiento
+sobre datos futuros, pero sobre estudiantes que ingresan por primera vez emite alertas
+bastante más certeras. Para un sistema de retención, que opera precisamente sobre cohortes
+nuevas, ese es el número relevante y es mejor que el titular.
+
+### El umbral no es trasladable entre periodos
+
+Con el mismo umbral de 0.5, el recall cae de 0.79 (partición aleatoria) a 0.44 (temporal)
+mientras la precision sube de 0.30 a 0.44. El modelo no solo pierde discriminación sobre
+datos futuros: **se descalibra**. El umbral óptimo persistido dentro del pipeline es válido
+para la distribución con la que se calculó, no para un periodo nuevo. Debe recalibrarse en
+cada ciclo de scoring sobre datos etiquetados recientes.
 
 ### Horizonte de predicción
 
