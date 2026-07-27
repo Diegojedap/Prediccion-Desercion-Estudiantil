@@ -1,0 +1,107 @@
+# ==============================================================================
+# DATOS SENSIBLES — NO VERSIONAR
+# ==============================================================================
+# Contienen información personal identificable de estudiantes reales
+# (identificación, etnia, discapacidad, condición LGBTIQ, salario, ubicación).
+# Dato sensible bajo la Ley 1581 de 2012 (Habeas Data, Colombia).
+
+*.xlsx
+*.xls
+*.csv
+*.parquet
+*.db
+*.sqlite3
+
+# Copia local de los notebooks con sus salidas originales (contienen cédulas).
+# Se conserva en disco para no perder los resultados ejecutados, pero jamás se sube.
+.backup_notebooks_con_salidas/
+
+# ==============================================================================
+# MODELOS SERIALIZADOS
+# ==============================================================================
+# Superan el límite de tamaño de GitHub y pueden filtrar estadísticas de los
+# datos de entrenamiento. Distribuir por un canal interno controlado.
+
+*.pkl
+*.joblib
+*.h5
+*.onnx
+*.model
+
+# ==============================================================================
+# CREDENCIALES Y CONFIGURACIÓN LOCAL
+# ==============================================================================
+
+.env
+.env.*
+!.env.example
+secrets.json
+config.local.*
+*.pem
+*.key
+
+# Mapeo de nombres institucionales usado por scripts/sanitizar_notebooks.py.
+# Sus claves son los esquemas y tablas internas reales: justo lo que no se publica.
+scripts/mapeo_esquemas.local.json
+
+# ==============================================================================
+# PYTHON
+# ==============================================================================
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+ENV/
+
+# ==============================================================================
+# JUPYTER
+# ==============================================================================
+
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+profile_default/
+ipython_config.py
+
+# ==============================================================================
+# HERRAMIENTAS Y CACHÉS
+# ==============================================================================
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_convert/
+catboost_info/
+lightgbm_model*.txt
+*.log
+
+# ==============================================================================
+# EDITORES
+# ==============================================================================
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ==============================================================================
+# SISTEMA OPERATIVO / ONEDRIVE
+# ==============================================================================
+
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*~$*
+~$*

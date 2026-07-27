@@ -1,0 +1,17 @@
+{
+  "_comentario": [
+    "Plantilla del mapeo de nombres. Copia este archivo como mapeo_esquemas.local.json",
+    "y reemplaza cada clave por el nombre real del esquema, tabla o variable que debe",
+    "desaparecer del repositorio. El archivo .local.json está excluido por .gitignore:",
+    "las claves son información institucional y no pueden publicarse.",
+    "Las claves se reemplazan en orden de longitud descendente, de modo que un nombre",
+    "que contiene a otro se sustituye primero."
+  ],
+  "ESQUEMA.TABLA_HISTORIAL_ACADEMICO": "academico.historial_academico",
+  "ESQUEMA.TABLA_APROBACION_MATERIAS": "academico.aprobacion_materias",
+  "ESQUEMA.TABLA_GEOLOCALIZACION": "geo.ubicacion_estudiante",
+  "ESQUEMA.TABLA_BECAS": "becas.descuentos_beca",
+  "ESQUEMA.TABLA_CARTERA": "financiera.cartera",
+  "TABLA_PLATAFORMA_VIRTUAL": "plataforma.permanencia",
+  "NOMBRE_VARIABLE_INSTITUCIONAL": "historial_academico"
+}
