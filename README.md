@@ -142,7 +142,12 @@ df['PORCENTAJE_APROBACION'] = df['PORCENTAJE_APROBACION'].replace(0, np.nan)
 
 ## Evolución de los prototipos
 
-| Versión | Enfoque | Accuracy |
+> La columna de accuracy se incluye solo para trazar la historia del proyecto. **No es el
+> criterio de selección** y no debe leerse como medida de calidad: en un problema
+> desbalanceado un modelo que predijera "nadie deserta" tendría accuracy alta y sería
+> inútil. Las métricas que gobiernan las decisiones son AUC y recall de la clase minoritaria.
+
+| Versión | Enfoque | Accuracy *(no comparable)* |
 |---|---|---|
 | 1.1 | LogisticRegression + DecisionTree + RandomForest | 0.85 – 0.86 |
 | 1.2 | Introduce SMOTE | 0.64 – 0.67 |
@@ -151,13 +156,16 @@ df['PORCENTAJE_APROBACION'] = df['PORCENTAJE_APROBACION'].replace(0, np.nan)
 | 1.5 | XGBoost + tuning | 0.72 – 0.80 |
 | Untitled-2 | Consolidación XGBoost, primer `joblib.dump` | 0.74 – 0.80 |
 | 1.7 | XGBoost + GridSearchCV + SMOTE + SHAP | 0.84 |
-| **1.6** | **Stacking XGB + LGBM + BayesSearchCV** | **0.86** |
+| 1.6 | Stacking XGB + LGBM + BayesSearchCV | 0.86 |
 
-La caída de accuracy en la versión 1.2 no es un retroceso, y entenderlo fue determinante para
-el resto del proyecto: es el efecto esperado de SMOTE, que sacrifica exactitud global a cambio
-de recall sobre la clase minoritaria. En un problema desbalanceado, la accuracy es una métrica
-engañosa —un modelo que predijera "nadie deserta" la tendría alta y sería inútil— así que a
-partir de esa versión el criterio de selección pasó a ser F1 y AUC.
+Las cifras de la última columna se midieron sobre particiones y poblaciones distintas, así que
+**no son comparables entre sí**: la diferencia entre 0.84 y 0.86 no mide la ganancia del
+stacking.
+
+La caída en la versión 1.2 no es un retroceso, y entenderlo fue determinante para el resto del
+proyecto: es el efecto esperado de SMOTE, que sacrifica exactitud global a cambio de recall
+sobre la clase minoritaria. A partir de esa versión el criterio de selección pasó a ser F1 y
+AUC.
 
 ---
 
