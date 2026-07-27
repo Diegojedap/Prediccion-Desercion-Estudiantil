@@ -128,7 +128,8 @@ df['PORCENTAJE_APROBACION'] = df['PORCENTAJE_APROBACION'].replace(0, np.nan)
 ├── Prototipo 1.4.ipynb    Introduce XGBoost
 ├── Prototipo 1.5.ipynb    XGBoost con ajuste de hiperparámetros
 ├── Prototipo 1.7.ipynb    XGBoost + GridSearchCV + SMOTE + umbral óptimo + SHAP
-├── Prototipo 1.6.ipynb    ★ Vigente: Stacking XGB+LGBM, optimización bayesiana
+├── Prototipo 1.6.ipynb    Stacking XGB+LGBM, optimización bayesiana
+├── Prototipo 1.8.ipynb    ★ Vigente: LightGBM, ventana reciente, ranking por capacidad
 ├── Untitled-2.ipynb       Consolidación intermedia de XGBoost
 │
 ├── Despliegue 1.7.ipynb   Scoring masivo con el pipeline de XGBoost
@@ -157,6 +158,10 @@ df['PORCENTAJE_APROBACION'] = df['PORCENTAJE_APROBACION'].replace(0, np.nan)
 | Untitled-2 | Consolidación XGBoost, primer `joblib.dump` | 0.74 – 0.80 |
 | 1.7 | XGBoost + GridSearchCV + SMOTE + SHAP | 0.84 |
 | 1.6 | Stacking XGB + LGBM + BayesSearchCV | 0.86 |
+| **1.8** | **LightGBM, ventana reciente, ranking por capacidad** | *no aplica* |
+
+La versión 1.8 no reporta accuracy deliberadamente: no opera por umbral, así que no produce
+una matriz de confusión única. Se evalúa por AUC y por precisión en el tramo priorizado.
 
 Las cifras de la última columna se midieron sobre particiones y poblaciones distintas, así que
 **no son comparables entre sí**: la diferencia entre 0.84 y 0.86 no mide la ganancia del
@@ -169,7 +174,55 @@ AUC.
 
 ---
 
-## Modelo final
+## Modelo vigente: versión 1.8
+
+Reescritura a partir de mediciones. Cada decisión se tomó comparando alternativas sobre datos
+reales, y varias contradicen lo que parecía razonable.
+
+| Decisión | Alternativa descartada | Evidencia |
+|---|---|---|
+| LightGBM solo | Stacking XGB + LGBM | AUC **0.7765** vs 0.7381, y 9× más rápido |
+| Ventana de 1 periodo | Historia completa (11 años) | AUC 0.7381 vs 0.7253, con 13,6 % de los datos |
+| Operar por capacidad | Umbral de probabilidad | El umbral no se transfiere entre periodos |
+| Partición temporal | Partición aleatoria | La aleatoria sobrestima el AUC en 0.101 |
+| 15 predictores | 17 | Dos eran constantes tras la imputación |
+
+### El hallazgo que reencuadró el proyecto
+
+La tasa de deserción **sube de forma sostenida entre periodos**: 9,8 % → 11,8 % → 15,1 % en
+tres años. Eso es deriva de concepto. El problema no es un modelo con fugas que haya que
+limpiar, sino un modelo que **envejece rápido**. La 1.8 lo asume: reentrena con datos
+recientes y opera por ranking en vez de por probabilidad absoluta.
+
+### Desempeño por capacidad de atención
+
+Un umbral fijo no sobrevive a la deriva —el óptimo pasa de 0.26 a 0.01 de un año al
+siguiente— pero el ranking sí. De ahí que el sistema no responda *"¿deserta este
+estudiante?"* sino *"¿cuáles son los N de mayor riesgo?"*, con N igual a lo que el equipo de
+retención puede atender.
+
+Evaluado sobre el periodo siguiente al de entrenamiento, que el modelo nunca vio:
+
+| Tramo priorizado | Precisión | Lift sobre el azar | Recall |
+|---|---|---|---|
+| **Top 1 %** | **0.979** | **6,5×** | 0.065 |
+| Top 5 % | 0.795 | 5,3× | 0.263 |
+| Top 10 % | 0.574 | 3,8× | 0.380 |
+| Top 20 % | 0.372 | 2,5× | 0.492 |
+
+**AUC-ROC: 0.7765**
+
+De cada 100 estudiantes en el tramo de mayor riesgo, 98 desertan efectivamente. Como
+clasificador binario sobre toda la población el modelo es discreto; como **priorizador** del
+tramo crítico es fuerte — y un programa de permanencia no interviene sobre cien mil personas,
+sino sobre mil.
+
+La elección del tramo es una decisión operativa, no una métrica a maximizar: se toma según la
+capacidad real del equipo.
+
+---
+
+## Arquitectura anterior (versión 1.6)
 
 ```python
 StackingClassifier(
