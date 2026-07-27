@@ -122,6 +122,8 @@ df['PORCENTAJE_APROBACION'] = df['PORCENTAJE_APROBACION'].replace(0, np.nan)
 │   ├── sanitizar_notebooks.py         Prepara los notebooks para publicación
 │   └── mapeo_esquemas.example.json    Plantilla del mapeo de nombres
 │
+├── Auditoria.ipynb        Reproduce cada número que este README afirma
+│
 ├── Prototipo 1.1.ipynb    Baseline: LogisticRegression, DecisionTree, RandomForest
 ├── Prototipo 1.2.ipynb    Incorpora SMOTE para balanceo de clases
 ├── Prototipo 1.3.ipynb    GridSearchCV sobre RandomForest
@@ -179,20 +181,30 @@ AUC.
 Reescritura a partir de mediciones. Cada decisión se tomó comparando alternativas sobre datos
 reales, y varias contradicen lo que parecía razonable.
 
+Todas las cifras de esta sección son reproducibles ejecutando
+[`Auditoria.ipynb`](Auditoria.ipynb).
+
 | Decisión | Alternativa descartada | Evidencia |
 |---|---|---|
-| LightGBM solo | Stacking XGB + LGBM | AUC **0.7765** vs 0.7381, y 9× más rápido |
-| Ventana de 1 periodo | Historia completa (11 años) | AUC 0.7381 vs 0.7253, con 13,6 % de los datos |
+| LightGBM solo | Stacking XGB + LGBM | AUC **0.7765** vs 0.7351, y 9× más rápido |
+| Ventana de 1 periodo | Historia completa (11 años) | AUC equivalente (0.7765 vs 0.7752) con 13,6 % de los datos y 6× menos tiempo |
 | Operar por capacidad | Umbral de probabilidad | El umbral no se transfiere entre periodos |
 | Partición temporal | Partición aleatoria | La aleatoria sobrestima el AUC en 0.101 |
-| 15 predictores | 17 | Dos eran constantes tras la imputación |
+| 16 predictores | 18 | Dos eran constantes tras la imputación |
 
 ### El hallazgo que reencuadró el proyecto
 
 La tasa de deserción **sube de forma sostenida entre periodos**: 9,8 % → 11,8 % → 15,1 % en
-tres años. Eso es deriva de concepto. El problema no es un modelo con fugas que haya que
-limpiar, sino un modelo que **envejece rápido**. La 1.8 lo asume: reentrena con datos
-recientes y opera por ranking en vez de por probabilidad absoluta.
+tres años. Eso es deriva de concepto, y explica por qué evaluar sobre un periodo futuro
+cuesta 10 puntos de AUC: el modelo aprende una población y se aplica a otra.
+
+Conviene precisar el alcance de esa conclusión, porque la medición la acota. **Los datos
+antiguos no perjudican: simplemente no aportan.** Entrenar con once años de historia da el
+mismo AUC que entrenar con el último periodo (0.7752 vs 0.7765, dentro del ruido). Se elige
+la ventana corta porque cuesta seis veces menos, no porque la larga contamine.
+
+Lo que sí obliga la deriva es a **reentrenar cada periodo** y a **no depender de la
+probabilidad absoluta**, que se descalibra entre cohortes.
 
 ### Desempeño por capacidad de atención
 
@@ -206,11 +218,14 @@ Evaluado sobre el periodo siguiente al de entrenamiento, que el modelo nunca vio
 | Tramo priorizado | Precisión | Lift sobre el azar | Recall |
 |---|---|---|---|
 | **Top 1 %** | **0.979** | **6,5×** | 0.065 |
+| Top 2 % | 0.962 | 6,4× | 0.127 |
 | Top 5 % | 0.795 | 5,3× | 0.263 |
 | Top 10 % | 0.574 | 3,8× | 0.380 |
-| Top 20 % | 0.372 | 2,5× | 0.492 |
+| Top 15 % | 0.463 | 3,1× | 0.460 |
+| Top 20 % | 0.385 | 2,6× | 0.510 |
+| Top 30 % | 0.308 | 2,0× | 0.612 |
 
-**AUC-ROC: 0.7765**
+**AUC-ROC: 0.7765** — tasa base del periodo evaluado: 0.151
 
 De cada 100 estudiantes en el tramo de mayor riesgo, 98 desertan efectivamente. Como
 clasificador binario sobre toda la población el modelo es discreto; como **priorizador** del
