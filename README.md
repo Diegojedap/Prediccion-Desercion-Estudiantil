@@ -529,8 +529,14 @@ funciona bastante peor de lo que sugiere la métrica global. Y la brecha más ag
 los estudiantes de 16 a 20 años obtienen un recall de 0.069 frente a 0.16 en los tramos
 mayores, con tasa base de deserción similar.
 
-**No desplegar con un único punto de operación global.** Fijar la capacidad por segmento evita
-que el acompañamiento dependa de qué tan fácil es predecir a cada grupo.
+**Mitigación implementada y medida.** Repartir la misma proporción de capacidad dentro de cada
+segmento, en lugar de un corte global, lleva la paridad de **0.099 a 0.850** y cuadruplica la
+detección en el grupo de 16 a 20 años (recall 0.069 → 0.313). Cuesta un 3,7 % menos de
+desertores captados y dos puntos de precisión.
+
+`priorizar()` lo aplica por defecto; el reparto global exige pedirlo explícitamente y avisa.
+Detalle en [`Auditoria_sesgo.ipynb`](Auditoria_sesgo.ipynb) y en el
+[model card](modelo/MODEL_CARD.md).
 
 ### Fuentes no incorporadas
 

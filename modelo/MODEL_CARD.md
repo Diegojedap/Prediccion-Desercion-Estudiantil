@@ -128,10 +128,33 @@ Su precisión es la más alta de todos los grupos, lo que confirma el mecanismo:
 los señala cuando está muy seguro y se le escapan casi todos. Son justamente los de primer
 ingreso, donde un programa de permanencia tiene más margen.
 
-**Implicación operativa:** no desplegar con un único punto de operación global, porque
-reproduce estas brechas. Fijar la capacidad **por segmento** —top N % dentro de cada grupo de
-edad o modalidad— hace que el acompañamiento no dependa de qué tan fácil es predecir a ese
-grupo.
+### Mitigación implementada *(medida)*
+
+La disparidad no viene de que el modelo sea injusto por diseño, sino de cómo se usa: un corte
+global asigna menos acompañamiento a los grupos que predice peor, justamente por ser más
+difíciles de predecir. Se compararon tres formas de repartir la misma capacidad total:
+
+| Estrategia | Paridad | Desertores captados | Precisión |
+|---|---|---|---|
+| Capacidad global | **0.099** | 6.815 | 0.597 |
+| **Misma tasa por segmento** | **0.850** | 6.564 *(−3,7 %)* | 0.575 |
+| Proporcional al riesgo del grupo | 0.657 | 6.768 *(−0,7 %)* | 0.593 |
+
+**Repartir la misma proporción dentro de cada grupo cierra la brecha**: la paridad pasa de
+0.099 a 0.850, por encima de la regla del 80 %, y el recall del grupo de 16 a 20 años sube de
+**0.069 a 0.313** — cuatro veces y media más detección. El costo es 251 desertores menos
+captados sobre 6.815 y dos puntos de precisión.
+
+`priorizar()` reparte por segmento **por defecto**. Aceptar un reparto global exige pasarlo
+explícitamente y emite un aviso, porque reintroduce la disparidad.
+
+Conviene notar que la opción teóricamente más elegante —repartir en proporción al riesgo
+esperado de cada grupo— **no funciona**: se queda en 0.657, porque la masa de riesgo del grupo
+sin datos absorbe la cuota.
+
+**Lo que la mitigación no arregla:** reparte mejor, pero no mejora la señal. El modelo sigue
+detectando peor a los estudiantes con ficha completa, y completar el registro sociodemográfico
+sigue siendo el pendiente de fondo.
 
 ---
 
