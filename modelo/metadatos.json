@@ -1,0 +1,44 @@
+{
+  "version": "1.8",
+  "entrenado_utc": "2026-07-28T15:03:44.954077+00:00",
+  "algoritmo": "LightGBM (LGBMClassifier)",
+  "hiperparametros": {
+    "n_estimators": 481,
+    "num_leaves": 32,
+    "learning_rate": 0.0244,
+    "subsample": 0.9122
+  },
+  "periodo_entrenamiento": 2023,
+  "periodo_evaluacion": 2024,
+  "predictores_declarados": 15,
+  "predictores_efectivos": 15,
+  "descartados_por_cobertura": [],
+  "features": [
+    "SEMESTRE_SINU",
+    "MATERIAS_INSCRITAS",
+    "MATERIAS_APROBADAS",
+    "PORCENTAJE_APROBACION",
+    "TOTAL",
+    "FLAG_NO_APROBO_NADA",
+    "TIPO_SALTO",
+    "MODALIDAD",
+    "GENERO",
+    "RANGO_EDAD",
+    "RANGO_SALARIO",
+    "ESTA_TRABAJANDO",
+    "METODO_FINANCIAMIENTO",
+    "ZONA_RESIDENCIA",
+    "REGIMEN_SISTEMA_SALUD"
+  ],
+  "metricas": {
+    "auc_roc": 0.7943,
+    "P@1%": 0.8896,
+    "P@5%": 0.7041,
+    "P@10%": 0.5972,
+    "P@20%": 0.4934,
+    "lift_top1pct": 4.55
+  },
+  "modo_operacion": "ranking por capacidad; NO usar umbral fijo de probabilidad",
+  "caducidad": "reentrenar cada periodo academico",
+  "nota": "Los conteos de poblacion y la tasa base se omiten deliberadamente."
+}

@@ -28,6 +28,13 @@
 *.onnx
 *.model
 
+# Excepción: el artefacto publicable de la versión vigente. Se distribuye en el
+# formato de texto de LightGBM —inspeccionable y sin ejecución de código al
+# cargarse, a diferencia de un pickle— junto a sus transformadores en JSON.
+!modelo/modelo_18.txt
+!modelo/transformadores.json
+!modelo/metadatos.json
+
 # ==============================================================================
 # CREDENCIALES Y CONFIGURACIÓN LOCAL
 # ==============================================================================

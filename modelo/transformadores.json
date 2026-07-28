@@ -1,0 +1,141 @@
+{
+  "numericas": {
+    "orden": [
+      "SEMESTRE_SINU",
+      "MATERIAS_INSCRITAS",
+      "MATERIAS_APROBADAS",
+      "PORCENTAJE_APROBACION",
+      "TOTAL",
+      "FLAG_NO_APROBO_NADA"
+    ],
+    "mediana_imputacion": [
+      3.0,
+      8.0,
+      6.0,
+      90.0,
+      135012.8,
+      0.0
+    ],
+    "media": [
+      4.096572,
+      7.438772,
+      5.468089,
+      83.519045,
+      135931.634984,
+      0.106102
+    ],
+    "escala": [
+      2.824699,
+      1.716902,
+      2.815188,
+      22.788086,
+      46738.302804,
+      0.307968
+    ]
+  },
+  "categoricas": {
+    "orden": [
+      "TIPO_SALTO",
+      "MODALIDAD",
+      "GENERO",
+      "RANGO_EDAD",
+      "RANGO_SALARIO",
+      "ESTA_TRABAJANDO",
+      "METODO_FINANCIAMIENTO",
+      "ZONA_RESIDENCIA",
+      "REGIMEN_SISTEMA_SALUD"
+    ],
+    "moda_imputacion": [
+      "Salto Normal",
+      "Virtual",
+      "F",
+      "None",
+      "None",
+      "Sí",
+      "None",
+      "Zona urbana",
+      "Régimen contributivo (EPS)"
+    ],
+    "categorias": {
+      "TIPO_SALTO": [
+        "Salto 335",
+        "Salto Normal"
+      ],
+      "MODALIDAD": [
+        "Distancia",
+        "Presencial",
+        "Virtual"
+      ],
+      "GENERO": [
+        "F",
+        "M",
+        "N",
+        "None"
+      ],
+      "RANGO_EDAD": [
+        "16 a 20 años",
+        "21 a 25 años",
+        "26 a 30 años",
+        "31 a 35 años",
+        "36 a 40 años",
+        "41 a 45 años",
+        "46 a 50 años",
+        "Más de 50 años",
+        "None"
+      ],
+      "RANGO_SALARIO": [
+        "Entre 1 y 2 SMMLV",
+        "Entre 3 y 4 SMMLV",
+        "Entre 5 y 6 SMMLV",
+        "Entre 7 y 8 SMMLV",
+        "Más de 8 SMMLV",
+        "None"
+      ],
+      "ESTA_TRABAJANDO": [
+        "No",
+        "None",
+        "Sí"
+      ],
+      "METODO_FINANCIAMIENTO": [
+        "Apoyo financiero familiar",
+        "Beca académica",
+        "Entidad bancaria (Banco Pichincha, Fincomercio)",
+        "Entidad pública (ICETEX)",
+        "Financiamiento directo con la institucion",
+        "Financiamiento propio",
+        "Fintech (Credity)",
+        "None"
+      ],
+      "ZONA_RESIDENCIA": [
+        "None",
+        "Zona rural",
+        "Zona urbana"
+      ],
+      "REGIMEN_SISTEMA_SALUD": [
+        "No tiene",
+        "None",
+        "Régimen contributivo (EPS)",
+        "Régimen subsidiado"
+      ]
+    },
+    "valor_desconocido": -1
+  },
+  "orden_final_de_columnas": [
+    "SEMESTRE_SINU",
+    "MATERIAS_INSCRITAS",
+    "MATERIAS_APROBADAS",
+    "PORCENTAJE_APROBACION",
+    "TOTAL",
+    "FLAG_NO_APROBO_NADA",
+    "TIPO_SALTO",
+    "MODALIDAD",
+    "GENERO",
+    "RANGO_EDAD",
+    "RANGO_SALARIO",
+    "ESTA_TRABAJANDO",
+    "METODO_FINANCIAMIENTO",
+    "ZONA_RESIDENCIA",
+    "REGIMEN_SISTEMA_SALUD"
+  ],
+  "_nota": "El orden de cada lista de categorias es AUTORITATIVO: el codificador ordinal asigna el indice por posicion. No reordenar."
+}

@@ -113,6 +113,12 @@ de las filas en un mismo valor tras la imputación. Ninguna aporta información.
 ├── Auditoria.ipynb        Mediciones reproducibles sobre un dataset exportado
 ├── Auditoria_base.ipynb   Mediciones que requieren conexión a la base
 │
+├── modelo/
+│   ├── MODEL_CARD.md          Uso previsto, límites, sesgos y caducidad
+│   ├── modelo_18.txt          El modelo entrenado (formato texto de LightGBM)
+│   ├── transformadores.json   Imputadores, escalador y codificador
+│   └── metadatos.json         Versión, hiperparámetros, variables y métricas
+│
 ├── Prototipo 1.1.ipynb    Baseline: LogisticRegression, DecisionTree, RandomForest
 ├── Prototipo 1.2.ipynb    Incorpora SMOTE para balanceo de clases
 ├── Prototipo 1.3.ipynb    GridSearchCV sobre RandomForest
@@ -311,6 +317,22 @@ Requiere el driver **ODBC Driver for SQL Server**. Configura la conexión copian
 ### Entrenamiento
 
 Ejecutar [`Prototipo 1.8.ipynb`](Prototipo%201.8.ipynb) de principio a fin.
+
+### Cargar el modelo publicado
+
+El artefacto entrenado está en [`modelo/`](modelo/), documentado en su
+[model card](modelo/MODEL_CARD.md). Se distribuye en el **formato de texto de LightGBM** y no
+como pickle: un pickle ejecuta código arbitrario al deserializarse, mientras que este formato
+es inspeccionable, no ejecuta nada al cargarse y no contiene registros individuales — solo los
+umbrales aprendidos.
+
+```python
+import lightgbm as lgb
+booster = lgb.Booster(model_file='modelo/modelo_18.txt')
+# Aplicar antes las transformaciones de transformadores.json,
+# respetando orden_final_de_columnas
+proba = booster.predict(X_transformado)
+```
 
 ### Priorización
 
