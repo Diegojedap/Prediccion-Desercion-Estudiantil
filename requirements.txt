@@ -1,0 +1,29 @@
+# Versiones con las que se ejecutaron los notebooks de este repositorio.
+# Verificadas: Auditoria.ipynb, Auditoria_base.ipynb, Auditoria_sesgo.ipynb y
+# Prototipo 1.8.ipynb corren de principio a fin con estas.
+#
+#     pip install -r requirements.txt
+#
+# Requiere además el driver ODBC Driver 18 for SQL Server para los notebooks
+# que se conectan a la base. Auditoria.ipynb funciona sin él.
+
+# ── Datos ───────────────────────────────────────────────────────────────────
+pandas==2.3.3
+numpy==2.4.6
+openpyxl==3.1.5
+
+# ── Modelado ────────────────────────────────────────────────────────────────
+scikit-learn==1.9.0
+scipy==1.18.0
+lightgbm==4.7.0
+xgboost==3.3.0
+imbalanced-learn==0.14.2
+joblib==1.5.3
+
+# ── Interpretabilidad y gráficos ────────────────────────────────────────────
+shap==0.52.0
+matplotlib==3.11.1
+
+# ── Acceso a la base ────────────────────────────────────────────────────────
+SQLAlchemy==2.0.50
+pyodbc==5.3.0

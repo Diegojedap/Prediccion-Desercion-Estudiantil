@@ -1,0 +1,59 @@
+name: Verificar repositorio
+
+# Este proyecto trabaja con datos personales de estudiantes sujetos a la
+# Ley 1581 de 2012. La disciplina de no publicarlos no puede depender de que
+# alguien recuerde ejecutar el barrido: aquí se ejecuta en cada push.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  fugas:
+    name: Sin datos institucionales ni credenciales
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verificar que no haya fugas
+        env:
+          # Lista separada por comas con los nombres reales de la organización,
+          # sus esquemas y sus tablas. Se configura en
+          # Settings > Secrets and variables > Actions > New repository secret.
+          # Si no está definido, el resto de comprobaciones se ejecuta igual y
+          # el script lo advierte.
+          TERMINOS_PROHIBIDOS: ${{ secrets.TERMINOS_PROHIBIDOS }}
+        run: python scripts/verificar_repo.py
+
+  notebooks:
+    name: Los notebooks son válidos
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Comprobar que las dependencias importan
+        run: |
+          python - <<'EOF'
+          import importlib
+          for m in ['pandas', 'numpy', 'sklearn', 'lightgbm', 'xgboost',
+                    'imblearn', 'shap', 'sqlalchemy']:
+              importlib.import_module(m)
+              print(f'  ok  {m}')
+          EOF

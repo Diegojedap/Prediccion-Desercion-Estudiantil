@@ -106,8 +106,15 @@ de las filas en un mismo valor tras la imputación. Ninguna aporta información.
 ├── .gitignore
 ├── .env.example
 │
+├── requirements.txt       Versiones exactas con las que corren los notebooks
+│
+├── .github/workflows/
+│   └── verificar.yml      CI: falla si entra un dato institucional
+│
 ├── scripts/
+│   ├── verificar_repo.py              Barrido de fugas (local y CI)
 │   ├── sanitizar_notebooks.py         Prepara los notebooks para publicación
+│   ├── entrenar_modelo.py             Reproduce el artefacto de modelo/
 │   └── mapeo_esquemas.example.json    Plantilla del mapeo de nombres
 │
 ├── Auditoria.ipynb        Mediciones reproducibles sobre un dataset exportado
@@ -322,6 +329,15 @@ Requiere el driver **ODBC Driver for SQL Server**. Configura la conexión copian
 
 Ejecutar [`Prototipo 1.8.ipynb`](Prototipo%201.8.ipynb) de principio a fin.
 
+### Reproducir el modelo
+
+```bash
+python scripts/entrenar_modelo.py
+```
+
+Entrena y exporta el contenido de [`modelo/`](modelo/). El repositorio reproduce así no solo
+sus métricas, sino el artefacto mismo.
+
 ### Cargar el modelo publicado
 
 El artefacto entrenado está en [`modelo/`](modelo/), documentado en su
@@ -367,6 +383,31 @@ sobrevive**.
 
 > Ejecútalo siempre antes de hacer commit. Un dato sensible que entra al historial de git
 > permanece allí aunque se borre en un commit posterior.
+
+### Verificación automática
+
+La disciplina de no publicar datos no puede depender de que alguien recuerde ejecutar el
+barrido, así que [`scripts/verificar_repo.py`](scripts/verificar_repo.py) corre en **cada push**
+vía [GitHub Actions](.github/workflows/verificar.yml) y falla la build si encuentra algo.
+También se ejecuta en local:
+
+```bash
+python scripts/verificar_repo.py
+```
+
+Comprueba cinco invariantes: que ningún notebook conserve salidas ejecutadas —la vía de fuga
+más fácil de reintroducir, porque las tablas impresas contenían identificaciones—, que no haya
+archivos de datos ni modelos serializados versionados, que no aparezcan credenciales ni IPs
+privadas, que los notebooks sean JSON válido y su código compile, y que no figure ningún
+término prohibido.
+
+Los nombres reales de la organización no se escriben en el script, por la misma razón por la
+que no se escriben en los notebooks: es público. En local se toman del mapeo excluido de
+control de versiones; en CI, del secreto `TERMINOS_PROHIBIDOS`.
+
+Este barrido no es teórico: **detectó una fuga real** —una categoría de método de
+financiamiento que contenía el nombre de la institución, dentro del artefacto del modelo— que
+se habría publicado sin él.
 
 ---
 
