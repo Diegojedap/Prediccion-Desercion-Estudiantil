@@ -112,6 +112,7 @@ de las filas en un mismo valor tras la imputación. Ninguna aporta información.
 │
 ├── Auditoria.ipynb        Mediciones reproducibles sobre un dataset exportado
 ├── Auditoria_base.ipynb   Mediciones que requieren conexión a la base
+├── Auditoria_sesgo.ipynb  Desempeño desagregado por grupo
 │
 ├── modelo/
 │   ├── MODEL_CARD.md          Uso previsto, límites, sesgos y caducidad
@@ -176,11 +177,14 @@ clasificador binario sobre toda la población el modelo es discreto; como **prio
 tramo crítico es fuerte — y un programa de permanencia no interviene sobre cien mil personas,
 sino sobre mil.
 
-> **Sobre estas cifras.** Se obtuvieron con **14 de los 15 predictores declarados**: la tabla
-> de origen de la variable de cartera estaba vacía en el momento de la medición, de modo que
-> llegaba completamente nula y el imputador la descartaba sin producir ningún error. La
-> versión 1.8 incorpora un control de cobertura explícito para que esa situación se declare en
-> lugar de pasar inadvertida.
+> **Sobre estas cifras.** Corresponden a una extracción concreta, cuya fecha consta en
+> [`modelo/metadatos.json`](modelo/metadatos.json) junto al número de predictores efectivos.
+> Ese detalle no es burocrático: durante una sesión de medición, la tabla de origen de la
+> variable de cartera pasó de tener datos a estar vacía y de vuelta a poblarse. Mientras
+> estuvo vacía, la variable llegaba completamente nula y el imputador la descartaba **sin
+> producir ningún error**, de modo que el modelo entrenaba con 14 predictores en lugar de 15
+> y nada lo advertía. La versión 1.8 incorpora un control de cobertura explícito para que esa
+> situación se declare en lugar de pasar inadvertida.
 
 ### Qué intervención soporta este modelo, y cuál no
 
@@ -384,11 +388,11 @@ participación por curso— es la candidata natural, y agregada por estudiante y
 
 | | AUC | P@1 % | Lift |
 |---|---|---|---|
-| Variables administrativas | 0.614 | 0.386 | 1,3× |
-| **Actividad en plataforma sola** | **0.838** | **0.913** | **3,0×** |
-| Ambas | 0.854 | 0.913 | 3,0× |
+| Variables administrativas | 0.684 | — | — |
+| **Actividad en plataforma sola** | **0.843** | — | — |
+| Ambas | **0.875** | — | — |
 
-La actividad aporta **+0.24 de AUC** y concentra el 69 % de la importancia del modelo
+La actividad aporta **+0.19 de AUC** y concentra cerca del 70 % de la importancia del modelo
 conjunto. Las variables que manda son nota media, dispersión de notas y volumen de actividad.
 
 El patrón subyacente es nítido: quienes desertan se matriculan con **la misma carga** —igual
@@ -446,6 +450,21 @@ huella = {'fecha': datetime.now(timezone.utc).isoformat(),
 
 Sin esa huella, dos métricas de este proyecto no son comparables aunque provengan del mismo
 código.
+
+### Sesgo por grupo — auditado, y hay disparidad
+
+Medido en [`Auditoria_sesgo.ipynb`](Auditoria_sesgo.ipynb) con la regla del 80 % sobre la
+paridad de recall. `GENERO` sale limpio (razón 0.921); `MODALIDAD`, `RANGO_SALARIO`,
+`ZONA_RESIDENCIA` y sobre todo `RANGO_EDAD` (razón **0.099**) presentan disparidad.
+
+El patrón de fondo: **el modelo detecta sobre todo a estudiantes con ficha incompleta**, cuyo
+recall es el más alto en todos los atributos. Para la mayoría, que sí tiene ficha completa,
+funciona bastante peor de lo que sugiere la métrica global. Y la brecha más aguda es por edad:
+los estudiantes de 16 a 20 años obtienen un recall de 0.069 frente a 0.16 en los tramos
+mayores, con tasa base de deserción similar.
+
+**No desplegar con un único punto de operación global.** Fijar la capacidad por segmento evita
+que el acompañamiento dependa de qué tan fácil es predecir a cada grupo.
 
 ### Fuentes no incorporadas
 

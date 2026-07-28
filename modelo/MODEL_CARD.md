@@ -103,9 +103,35 @@ pipeline declara la cobertura de cada una y descarta las vacías en lugar de per
 silencio, pero las que sobreviven con cobertura baja aportan menos de lo que su presencia
 sugiere.
 
-**Sesgo no auditado.** No se ha medido el desempeño diferencial por género, modalidad, zona de
-residencia ni rango salarial. El modelo usa esas variables, así que **puede** tener tasas de
-error distintas entre grupos. Es un pendiente antes de cualquier uso operativo.
+**Sesgo por grupo: auditado, y hay disparidad.** Medido en
+[`Auditoria_sesgo.ipynb`](../Auditoria_sesgo.ipynb), con el punto de operación en el top 10 %.
+La métrica es la **paridad de recall** —un estudiante en riesgo debería tener la misma
+probabilidad de ser detectado sea cual sea su grupo— evaluada con la regla del 80 %:
+
+| Atributo | Razón de recall | Estado |
+|---|---|---|
+| `GENERO` | 0.921 | aceptable |
+| `MODALIDAD` | 0.499 | **disparidad** |
+| `RANGO_SALARIO` | 0.503 | **disparidad** |
+| `ZONA_RESIDENCIA` | 0.374 | **disparidad** |
+| `RANGO_EDAD` | **0.099** | **disparidad severa** |
+
+**El modelo detecta sobre todo a estudiantes con ficha incompleta.** En cada atributo, el
+grupo con mayor recall es el de valor ausente. No es un artefacto: quienes tienen datos
+faltantes desertan más, y el modelo lo explota correctamente. Pero implica que **para la
+mayoría, que sí tiene ficha completa, el modelo funciona bastante peor de lo que sugiere su
+métrica global**.
+
+**La brecha más preocupante es por edad.** Los estudiantes de 16 a 20 años obtienen un recall
+de **0.069** frente a 0.16 en los tramos mayores, pese a una tasa base de deserción similar.
+Su precisión es la más alta de todos los grupos, lo que confirma el mecanismo: el modelo solo
+los señala cuando está muy seguro y se le escapan casi todos. Son justamente los de primer
+ingreso, donde un programa de permanencia tiene más margen.
+
+**Implicación operativa:** no desplegar con un único punto de operación global, porque
+reproduce estas brechas. Fijar la capacidad **por segmento** —top N % dentro de cada grupo de
+edad o modalidad— hace que el acompañamiento no dependa de qué tan fácil es predecir a ese
+grupo.
 
 ---
 
