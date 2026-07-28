@@ -112,7 +112,7 @@ de las filas en un mismo valor tras la imputación. Ninguna aporta información.
 │   └── pre-commit         Bloquea el commit si detecta una fuga
 │
 ├── .github/workflows/
-│   └── verificar.yml      Lo mismo, en integración continua
+│   └── verificar.yml      Lo mismo en CI (manual: ver nota)
 │
 ├── scripts/
 │   ├── verificar_repo.py              Barrido de fugas (local y CI)
@@ -404,9 +404,14 @@ A partir de ahí, cualquier commit que introduzca una fuga se **bloquea antes de
 historial**. Para este propósito es más efectivo que la integración continua: la CI se ejecuta
 después del push, cuando el dato ya está publicado y solo queda avisar. El hook lo impide.
 
-**Integración continua — la red de seguridad.** El mismo script corre en cada push vía
-[GitHub Actions](.github/workflows/verificar.yml) y falla la build, por si alguien commitea
-con `--no-verify` o sin el hook activado.
+**Integración continua — la red de seguridad.** El mismo script está disponible como
+[workflow de GitHub Actions](.github/workflows/verificar.yml), por si alguien commitea con
+`--no-verify` o sin el hook activado.
+
+> Sus disparadores automáticos están desactivados: en la cuenta donde vive este repositorio
+> los runners no arrancan por un bloqueo de facturación, así que cada push generaba una
+> ejecución fallida que no decía nada sobre el código. El workflow se ejecuta a mano desde la
+> pestaña *Actions*, y basta descomentar cuatro líneas para reactivarlo.
 
 Y a mano, cuando quieras:
 

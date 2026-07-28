@@ -4,10 +4,22 @@ name: Verificar repositorio
 # Ley 1581 de 2012. La disciplina de no publicarlos no puede depender de que
 # alguien recuerde ejecutar el barrido: aquí se ejecuta en cada push.
 
+# Los disparadores automáticos están desactivados a propósito. En esta cuenta
+# los runners no arrancan —"the job was not started because your account is
+# locked due to a billing issue"—, de modo que cada push producía una ejecución
+# fallida que no dice nada sobre el código.
+#
+# La protección efectiva mientras tanto es el hook de .githooks/pre-commit, que
+# para prevenir fugas es además preferible: actúa antes de que el dato entre al
+# historial, no después del push.
+#
+# Para reactivarlo cuando Actions vuelva a funcionar, descomenta estas líneas:
+#
+#   push:
+#     branches: [main]
+#   pull_request:
+
 on:
-  push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
 
 jobs:
