@@ -110,7 +110,8 @@ de las filas en un mismo valor tras la imputación. Ninguna aporta información.
 │   ├── sanitizar_notebooks.py         Prepara los notebooks para publicación
 │   └── mapeo_esquemas.example.json    Plantilla del mapeo de nombres
 │
-├── Auditoria.ipynb        Reproduce las mediciones que este README afirma
+├── Auditoria.ipynb        Mediciones reproducibles sobre un dataset exportado
+├── Auditoria_base.ipynb   Mediciones que requieren conexión a la base
 │
 ├── Prototipo 1.1.ipynb    Baseline: LogisticRegression, DecisionTree, RandomForest
 ├── Prototipo 1.2.ipynb    Incorpora SMOTE para balanceo de clases
@@ -168,6 +169,12 @@ De cada 100 estudiantes en el tramo de mayor riesgo, 89 desertan efectivamente. 
 clasificador binario sobre toda la población el modelo es discreto; como **priorizador** del
 tramo crítico es fuerte — y un programa de permanencia no interviene sobre cien mil personas,
 sino sobre mil.
+
+> **Sobre estas cifras.** Se obtuvieron con **14 de los 15 predictores declarados**: la tabla
+> de origen de la variable de cartera estaba vacía en el momento de la medición, de modo que
+> llegaba completamente nula y el imputador la descartaba sin producir ningún error. La
+> versión 1.8 incorpora un control de cobertura explícito para que esa situación se declare en
+> lugar de pasar inadvertida.
 
 ### Qué intervención soporta este modelo, y cuál no
 
@@ -243,8 +250,12 @@ vuelva a perseguirla.
 | El preprocesamiento antes del split infla | ❌ Efecto **−0.004** (el pipeline limpio rinde algo mejor) |
 | La partición temporal infla el AUC | ❌ Efecto **−0.006** con datos actuales |
 
-Las tres primeras se refutaron con [`Auditoria.ipynb`](Auditoria.ipynb). La cuarta requirió
-volver a la base, y es la más instructiva.
+Las tres primeras se reproducen con [`Auditoria.ipynb`](Auditoria.ipynb), que trabaja sobre un
+dataset exportado. La cuarta, junto al costo del desfase temporal y el aporte de la actividad
+en plataforma, requiere conexión a la base y vive en
+[`Auditoria_base.ipynb`](Auditoria_base.ipynb).
+
+La cuarta es la más instructiva.
 
 ### El hallazgo de fondo: el target no es estable en origen
 
