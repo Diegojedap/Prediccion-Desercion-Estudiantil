@@ -5,7 +5,7 @@ orientado a programas de intervención temprana y retención.
 
 El proyecto documenta el recorrido completo de un problema real de clasificación
 desbalanceada — integración de fuentes, ingeniería de características, ensamblado,
-interpretabilidad — y, sobre todo, una auditoría que **refutó cuatro de sus propias
+interpretabilidad — y, sobre todo, una auditoría que **refutó seis de sus propias
 conclusiones** al medirlas contra los datos.
 
 ---
@@ -257,7 +257,7 @@ partición aleatoria parecía mejorar; bajo evaluación honesta no sobrevive.
 
 ---
 
-## Auditoría: cuatro conclusiones propias, refutadas
+## Auditoría: seis conclusiones propias, refutadas
 
 El diagnóstico de este proyecto cambió cuatro veces al medirlo. Se documentan las refutaciones
 porque descartar una causa con una medición vale tanto como confirmarla, y evita que alguien
@@ -269,6 +269,8 @@ vuelva a perseguirla.
 | Los sujetos repetidos inflan la métrica | ❌ Efecto **0.000** |
 | El preprocesamiento antes del split infla | ❌ Efecto **−0.004** (el pipeline limpio rinde algo mejor) |
 | La partición temporal infla el AUC | ❌ Efecto **−0.006** con datos actuales |
+| El stacking mejora sobre sus componentes | ❌ **Peor** que ambos, y 9× más lento |
+| Recalibrar el umbral cada periodo aporta | ❌ 85,8 % contra 85,5 % sin recalibrar |
 
 Las tres primeras se reproducen con [`Auditoria.ipynb`](Auditoria.ipynb), que trabaja sobre un
 dataset exportado. La cuarta, junto al costo del desfase temporal y el aporte de la actividad
@@ -463,7 +465,8 @@ escritas antes de que alguien lo tome como conclusión:
 
 1. **La comparación es contra un baseline incompleto.** Las variables de rendimiento
    académico vienen nulas en la fuente para los periodos con cobertura de plataforma, así que
-   el 0.614 corresponde a semestre y perfil sociodemográfico, no al modelo real.
+   el 0.684 del baseline corresponde a semestre y perfil sociodemográfico, no al modelo
+   real.
 2. **No hay marca temporal dentro del periodo.** Sin la fecha de cada actividad no se puede
    distinguir *"se desenganchó en las primeras semanas"* —señal temprana legítima— de
    *"dejó de participar al irse"*, que sería medir el desenlace en lugar de anticiparlo.
@@ -474,7 +477,7 @@ escritas antes de que alguien lo tome como conclusión:
 
 **Requisito para cerrar la pregunta:** marca temporal por actividad. Con ella se puede
 truncar el histórico a las primeras semanas del periodo y medir si la señal se sostiene. Sin
-ella, este 0.838 es indistinguible de una fuga.
+ella, este 0.843 es indistinguible de una fuga.
 
 ### Estabilidad de las fuentes — el riesgo transversal
 
