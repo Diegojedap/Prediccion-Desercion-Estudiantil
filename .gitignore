@@ -51,6 +51,10 @@ config.local.*
 # Sus claves son los esquemas y tablas internas reales: justo lo que no se publica.
 scripts/mapeo_esquemas.local.json
 
+# Contexto local: rutas de la máquina, nombre de la organización y datos de
+# conexión. El equivalente publicable es CLAUDE.md.
+CLAUDE.local.md
+
 # ==============================================================================
 # PYTHON
 # ==============================================================================
