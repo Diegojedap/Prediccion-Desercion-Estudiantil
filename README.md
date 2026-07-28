@@ -341,24 +341,78 @@ Documentada arriba con números: desfasar las variables un periodo cuesta 0.128 
 la precisión del tramo prioritario de 0.834 a 0.266.
 
 El pendiente real no es de modelado sino **de datos**: hacen falta variables observables al
-comienzo del periodo. Candidatas concretas, en orden de promesa:
+comienzo del periodo.
 
-1. **Actividad en plataforma virtual durante las primeras semanas** — accesos, entregas,
-   participación. Es la señal temprana por excelencia y la fuente existe, pero quedó fuera de
-   esta versión.
-2. **Estado de pago al momento de la matrícula**, no al cierre.
-3. **Comportamiento de inscripción**: matrícula tardía, carga académica reducida respecto al
-   periodo anterior, cambios de modalidad.
-4. **Notas parciales de corte**, disponibles a mitad de periodo.
+### La actividad en plataforma: prometedora y no verificable *(medido)*
 
-Sin ellas, cualquier intento de anticipación se apoya en información del semestre anterior,
-que este experimento muestra insuficiente.
+La fuente de actividad en la plataforma virtual —entregas, calificaciones parciales,
+participación por curso— es la candidata natural, y agregada por estudiante y periodo resulta
+**mucho más predictiva que todo el resto junto**:
 
-### Estabilidad del target
+| | AUC | P@1 % | Lift |
+|---|---|---|---|
+| Variables administrativas | 0.614 | 0.386 | 1,3× |
+| **Actividad en plataforma sola** | **0.838** | **0.913** | **3,0×** |
+| Ambas | 0.854 | 0.913 | 3,0× |
 
-Documentada arriba. Antes de comparar cualquier métrica futura con las de este README, hay que
-verificar que el criterio del campo de estado no haya cambiado en origen. Conviene versionar
-cada extracción con su fecha y su tasa base.
+La actividad aporta **+0.24 de AUC** y concentra el 69 % de la importancia del modelo
+conjunto. Las variables que manda son nota media, dispersión de notas y volumen de actividad.
+
+El patrón subyacente es nítido: quienes desertan se matriculan con **la misma carga** —igual
+número de cursos y de créditos— pero generan **un 25 % menos de actividad registrada**. Es
+desenganche, no ausencia de datos: de hecho aparecen en la plataforma con más frecuencia que
+quienes se quedan.
+
+**Y aun así el resultado no puede darse por bueno**, por tres razones que conviene dejar
+escritas antes de que alguien lo tome como conclusión:
+
+1. **La comparación es contra un baseline incompleto.** Las variables de rendimiento
+   académico vienen nulas en la fuente para los periodos con cobertura de plataforma, así que
+   el 0.614 corresponde a semestre y perfil sociodemográfico, no al modelo real.
+2. **No hay marca temporal dentro del periodo.** Sin la fecha de cada actividad no se puede
+   distinguir *"se desenganchó en las primeras semanas"* —señal temprana legítima— de
+   *"dejó de participar al irse"*, que sería medir el desenlace en lugar de anticiparlo.
+3. **La cobertura histórica es de un solo año**, y sus periodos son flujos paralelos por
+   cohorte, no una secuencia que un mismo estudiante recorra. Menos del 1 % de los
+   estudiantes aparece en dos periodos consecutivos, así que no se puede construir el desfase
+   con esta fuente.
+
+**Requisito para cerrar la pregunta:** marca temporal por actividad. Con ella se puede
+truncar el histórico a las primeras semanas del periodo y medir si la señal se sostiene. Sin
+ella, este 0.838 es indistinguible de una fuga.
+
+### Estabilidad de las fuentes — el riesgo transversal
+
+Documentado arriba para el target, pero el problema es más amplio y afecta a **toda métrica
+que este repositorio reporte**. Durante una sola sesión de medición se observó que:
+
+- El criterio del campo de estado se había **recalculado**, desplazando la tasa base entre 3
+  y 13 puntos porcentuales en todos los periodos, incluidos los cerrados hacía una década.
+- Una de las tablas de origen estaba **vacía**, de modo que su variable entraba como
+  completamente nula y el imputador la descartaba en silencio: el modelo corría con una
+  variable menos de las declaradas, sin aviso.
+- Otra tenía la columna clave **nula para los periodos recientes** pese a contener filas.
+- El conteo de filas de la tabla principal **creció durante la propia sesión**.
+
+Ninguna de esas condiciones produce un error: producen métricas distintas, en silencio.
+
+**Controles mínimos antes de dar por buena cualquier medición futura:**
+
+```python
+# 1. Cobertura real de cada variable, no solo que el merge no falle
+for c in FEATURES:
+    assert df[c].notna().mean() > 0.5, f"{c} tiene cobertura insuficiente"
+
+# 2. Las filas no deben cambiar al integrar fuentes
+assert len(df) == filas_iniciales
+
+# 3. Registrar la huella de la extracción junto a las métricas
+huella = {'fecha': datetime.now(timezone.utc).isoformat(),
+          'filas': len(df), 'tasa_base': float(y.mean())}
+```
+
+Sin esa huella, dos métricas de este proyecto no son comparables aunque provengan del mismo
+código.
 
 ### Fuentes no incorporadas
 
