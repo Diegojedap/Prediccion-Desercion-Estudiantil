@@ -108,8 +108,11 @@ de las filas en un mismo valor tras la imputación. Ninguna aporta información.
 │
 ├── requirements.txt       Versiones exactas con las que corren los notebooks
 │
+├── .githooks/
+│   └── pre-commit         Bloquea el commit si detecta una fuga
+│
 ├── .github/workflows/
-│   └── verificar.yml      CI: falla si entra un dato institucional
+│   └── verificar.yml      Lo mismo, en integración continua
 │
 ├── scripts/
 │   ├── verificar_repo.py              Barrido de fugas (local y CI)
@@ -387,9 +390,23 @@ sobrevive**.
 ### Verificación automática
 
 La disciplina de no publicar datos no puede depender de que alguien recuerde ejecutar el
-barrido, así que [`scripts/verificar_repo.py`](scripts/verificar_repo.py) corre en **cada push**
-vía [GitHub Actions](.github/workflows/verificar.yml) y falla la build si encuentra algo.
-También se ejecuta en local:
+barrido. [`scripts/verificar_repo.py`](scripts/verificar_repo.py) lo automatiza en dos puntos.
+
+**Hook de pre-commit — la defensa principal.** Actívalo una vez tras clonar:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+A partir de ahí, cualquier commit que introduzca una fuga se **bloquea antes de entrar al
+historial**. Para este propósito es más efectivo que la integración continua: la CI se ejecuta
+después del push, cuando el dato ya está publicado y solo queda avisar. El hook lo impide.
+
+**Integración continua — la red de seguridad.** El mismo script corre en cada push vía
+[GitHub Actions](.github/workflows/verificar.yml) y falla la build, por si alguien commitea
+con `--no-verify` o sin el hook activado.
+
+Y a mano, cuando quieras:
 
 ```bash
 python scripts/verificar_repo.py

@@ -1,0 +1,50 @@
+#!/bin/sh
+#
+# Bloquea el commit si el repositorio contiene datos institucionales,
+# credenciales o notebooks con salidas ejecutadas.
+#
+# Corre en tu máquina, antes de que el dato entre en el historial. Es más
+# efectivo que una verificación en integración continua para este propósito:
+# la CI se ejecuta después del push, cuando el dato ya está publicado y solo
+# queda avisar. Esto lo impide.
+#
+# Activación:
+#     git config core.hooksPath .githooks
+#
+# Para saltarlo de forma deliberada y puntual:
+#     git commit --no-verify
+
+set -e
+
+# Busca un intérprete de Python disponible
+for candidato in python python3 py; do
+    if command -v "$candidato" >/dev/null 2>&1; then
+        PY="$candidato"
+        break
+    fi
+done
+
+if [ -z "$PY" ]; then
+    echo "pre-commit: no se encontró Python; se omite la verificación." >&2
+    echo "            Ejecuta 'python scripts/verificar_repo.py' a mano." >&2
+    exit 0
+fi
+
+echo "pre-commit: verificando que no haya datos institucionales..."
+
+if ! "$PY" scripts/verificar_repo.py; then
+    echo ""
+    echo "──────────────────────────────────────────────────────────────"
+    echo " COMMIT BLOQUEADO"
+    echo ""
+    echo " Corrige lo señalado arriba y vuelve a intentarlo."
+    echo " Si el hallazgo es un falso positivo, puedes saltarlo con:"
+    echo ""
+    echo "     git commit --no-verify"
+    echo ""
+    echo " Hazlo solo si has comprobado que no es una fuga real. Un dato"
+    echo " sensible que entra al historial permanece allí aunque se borre"
+    echo " en un commit posterior."
+    echo "──────────────────────────────────────────────────────────────"
+    exit 1
+fi
